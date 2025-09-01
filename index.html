@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sight Unseen Trade-In – Quirk Auto (v3.0)</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://vpic.nhtsa.dot.gov" />
+  <link rel="stylesheet" href="assets/styles.css?v=2" />
+</head>
+<body>
+
+  <!-- 
+    Final Version:
+    1. The 'netlify' attribute tells Netlify to process the form.
+    2. The 'action="/success/index.html"' attribute now points directly to the success file.
+  -->
+  <form id="tradeForm"
+        action="/.netlify/functions/trade-appraisal"
+        method="post"
+        enctype="multipart/form-data"
+        netlify-honeypot="company">
+  
+  
+
+
+  <!-- This is the honeypot field to catch bots -->
+  <input type="text" name="company" tabindex="-1" autocomplete="off"
+         style="position:absolute; left:-10000px; opacity:0; height:0; width:0;">
+
+  <!-- These hidden fields will be populated by app.js -->
+  <input type="hidden" id="referrer"     name="referrer">
+  <input type="hidden" id="landingPage" name="landingPage">
+  <input type="hidden" id="utmSource"   name="utmSource">
+  <input type="hidden" id="utmMedium"   name="utmMedium">
+  <input type="hidden" id="utmCampaign" name="utmCampaign">
+  <input type="hidden" id="utmTerm"     name="utmTerm">
+  <input type="hidden" id="utmContent"  name="utmContent">
+  <input type="hidden" id="phoneRaw"    name="phoneRaw">
+
+  <div class="header-title">
+    <div class="branding">
+      <div id="quirkBrand"></div>
+    </div>
+    <h1 data-i18n="title">Sight Unseen Trade-In Appraisal</h1>
+  </div>
+
+  <p class="lead" data-i18n="welcome">Welcome to the Quirk Auto Dealers Sight Unseen Appraisal Program</p>
+  <p data-i18n="instructions">Please fill out this form with accurate and complete details about your vehicle. The trade-in value we provide will be honored as long as the vehicle condition matches your answers. We'll verify everything when you bring the vehicle in. If the condition differs, the offer will be adjusted accordingly.</p>
+
+  <div class="utilitybar">
+    <div class="left-actions">
+      <button type="button" id="decodeVinBtn" class="ghost-btn" aria-live="polite" data-i18n="decodeVinBtn">
+        Decode VIN & Prefill
+      </button>
+      <button type="button" id="clearBtn" class="ghost-btn" data-i18n="clearBtn">Clear Form</button>
+    </div>
+    <button id="langToggle" type="button" class="spanish-btn btn btn-green">versión en español</button>
+  </div>
+
+    <div class="section">
+      <h2 data-i18n="aboutYou">Tell us about Yourself</h2>
+      <div class="row">
+        <div>
+          <label for="name" class="req" data-i18n="nameLabel">Full Name</label>
+          <input id="name" name="name" type="text" autocomplete="name" required>
+          <div>
+            <label for="phone" class="req" data-i18n="phoneLabel">Phone Number</label>
+            <div class="phone-wrapper">
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="(###) ###-####" aria-describedby="phoneHint">
+            </div>
+            <div id="phoneHint" class="hint" data-i18n="phoneHint"></div>
+          </div>
+        </div>
+        <div>
+          <label for="email" class="req" data-i18n="emailLabel">Email Address</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+      </div>
+    </div>
+
+    <fieldset class="section">
+      <legend class="visually-hidden">Vehicle Details</legend>
+      <h2 data-i18n="vehDetails">Vehicle Details</h2>
+      <div class="row">
+        <div>
+          <label for="vin" class="req" data-i18n="vinLabel">VIN (required)</label>
+          <input id="vin" name="vin" type="text" required minlength="17" maxlength="17" pattern="[A-HJ-NPR-Za-hj-npr-z0-9]{17}" placeholder="Enter 17 digit VIN" aria-describedby="vinHint">
+          <div id="vinHint" class="hint" data-i18n="vinHint">VIN auto-capitalizes; letters I, O, Q are invalid.</div>
+        </div>
+        <div>
+          <label for="mileage" class="req" data-i18n="mileageLabel">Current Mileage</label>
+<input type="number" id="mileage" name="mileage" min="0" placeholder="e.g., 45000" required>
+
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="year" class="req" data-i18n="yearLabel">Year</label>
+          <select id="year" name="year" required>
+            <option value="" data-i18n="selectYear">Select Year</option>
+          </select>
+        </div>
+        <div>
+          <label for="make" class="req" data-i18n="makeLabel">Make</label>
+          <select id="make" name="make" required>
+            <option value="" data-i18n="selectMake">Select Make</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="model" class="req" data-i18n="modelLabel">Model</label>
+          <select id="model" name="model" required>
+            <option value="" data-i18n="selectModel">Select Model</option>
+          </select>
+          <div id="modelStatus" class="hint" aria-live="polite" aria-atomic="true"></div>
+        </div>
+        <div>
+          <label for="trim" data-i18n="trimLabel">Trim Level (if known)</label>
+          <input id="trim" name="trim" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="extColor" data-i18n="extColorLabel">Exterior Color</label>
+          <input id="extColor" name="extColor" type="text">
+        </div>
+        <div>
+          <label for="intColor" data-i18n="intColorLabel">Interior Color</label>
+          <input id="intColor" name="intColor" type="text">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="keys" data-i18n="keysLabel">Number of Keys Included</label>
+          <input id="keys" name="keys" type="number" min="0" max="10">
+        </div>
+        <div>
+          <label for="title" data-i18n="titleStatus">Title Status</label>
+          <select id="title" name="title">
+            <option value="Clean" data-i18n="titleClean">Clean</option>
+            <option value="Lien" data-i18n="titleLien">Lien</option>
+            <option value="Rebuilt" data-i18n="titleRebuilt">Rebuilt</option>
+            <option value="Salvage" data-i18n="titleSalvage">Salvage</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="owners" data-i18n="ownersLabel">Number of Owners (estimate OK)</label>
+          <input id="owners" name="owners" type="number" min="0" max="20">
+        </div>
+        <div>
+          <label for="accident" data-i18n="accidentLabel">Has the vehicle ever been in an accident?</label>
+          <select id="accident" name="accident">
+            <option>No</option>
+            <option>Yes</option>
+          </select>
+        </div>
+      </div>
+      <label for="accidentRepair" data-i18n="accidentRepair">If yes, was it professionally repaired?</label>
+      <textarea id="accidentRepair" name="accidentRepair" rows="3" placeholder="Yes / No / Details"></textarea>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend class="visually-hidden">Vehicle Condition</legend>
+      <h2 data-i18n="vehCondition">Vehicle Condition</h2>
+      <label for="warnings" data-i18n="warnings">Any warning lights on dashboard?</label>
+      <select id="warnings" name="warnings"><option>No</option><option>Yes</option></select>
+      <label for="mech" data-i18n="mech">Mechanical issues</label>
+      <textarea id="mech" name="mech" rows="3"></textarea>
+      <label for="cosmetic" data-i18n="cosmetic">Cosmetic issues</label>
+      <textarea id="cosmetic" name="cosmetic" rows="3"></textarea>
+      <label for="interior" data-i18n="interior">Interior clean and damage-free?</label>
+      <textarea id="interior" name="interior" rows="2"></textarea>
+      <label for="mods" data-i18n="mods">Aftermarket parts or modifications?</label>
+      <textarea id="mods" name="mods" rows="2"></textarea>
+      <label for="smells" data-i18n="smells">Unusual smells?</label>
+      <textarea id="smells" name="smells" rows="2"></textarea>
+      <label for="service" data-i18n="service">Routine services up to date?</label>
+      <textarea id="service" name="service" rows="2"></textarea>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend class="visually-hidden">Wearable Items Check</legend>
+      <h2 data-i18n="wearables">Wearable Items Check</h2>
+      <div class="row">
+        <div>
+          <label for="tires" data-i18n="tires">Tire Condition</label>
+          <select id="tires" name="tires">
+            <option>New</option>
+            <option>Good</option>
+            <option>Worn</option>
+            <option>Needs Replacement</option>
+          </select>
+        </div>
+        <div>
+          <label for="brakes" data-i18n="brakes">Brake Condition</label>
+          <select id="brakes" name="brakes">
+            <option>New</option>
+            <option>Good</option>
+            <option>Worn</option>
+            <option>Needs Replacement</option>
+          </select>
+        </div>
+      </div>
+      <label for="wear" data-i18n="wearOther">Other Wear Items (issues?)</label>
+      <textarea id="wear" name="wear" rows="2"></textarea>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend class="visually-hidden">Photo Uploads</legend>
+      <h2 data-i18n="photos">Photo Uploads (Optional)</h2>
+      <label data-i18n="photosExterior">Exterior Photos</label>
+      <input id="photoExterior" name="photoExterior" type="file" accept="image/*" multiple>
+      <div id="prevExterior" class="preview-grid" aria-live="polite"></div>
+
+      <label data-i18n="photosInterior">Interior Photos</label>
+      <input id="photoInterior" name="photoInterior" type="file" accept="image/*" multiple>
+      <div id="prevInterior" class="preview-grid" aria-live="polite"></div>
+
+      <label data-i18n="photosDash">Dashboard / Odometer</label>
+      <input id="photoDash" name="photoDash" type="file" accept="image/*">
+      <div id="prevDash" class="preview-grid" aria-live="polite"></div>
+
+      <label data-i18n="photosDamage">Damage / Flaws</label>
+      <input id="photoDamage" name="photoDamage" type="file" accept="image/*" multiple>
+      <div id="prevDamage" class="preview-grid" aria-live="polite"></div>
+      <div class="hint" data-i18n="photoHint">Max 10MB per file; 24 files total.</div>
+    </fieldset>
+
+    <div class="section agreement-card">
+      <h2 data-i18n="finalDisclaimerTitle">Final Disclaimer</h2>
+      <p class="disclaimer" data-i18n="finalDisclaimer">I confirm the information provided is accurate to the best of my knowledge. I understand that the appraisal value may change if the vehicle's actual condition does not match the details above.</p>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agree" name="agree" required>
+        <label for="agree" data-i18n="agreeLabel">I agree and confirm</label>
+      </div>
+    </div>
+
+    <button type="submit" id="submitBtn" data-i18n="submit">Get My Trade Appraisal</button>
+    <div class="smallprint">By submitting, you agree to be contacted by Quirk Auto. We won't spam you.</div>
+  </form>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
