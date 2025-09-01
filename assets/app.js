@@ -99,6 +99,64 @@ function setYearSelectValue(selectEl, year) {
  modelStatus = document.getElementById("modelStatus") || document.getElementById("model-status");
 
  form = document.getElementById('tradeForm');
+// Insert this block in assets/app.js immediately AFTER your DOM refs section
+// (right after: `form = document.getElementById('tradeForm');`)
+
+/* -------------------- Dealership dropdown behavior -------------------- */
+(function initDealership(){
+  const STORAGE_KEY = 'quirk_dealership';
+  const el = document.getElementById('dealership');
+  if (!el) return; // safe no-op if HTML not present
+
+  // Restore previous choice (if any)
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && [...el.options].some(o => o.value === saved)) {
+      el.value = saved;
+    }
+  } catch(_) {}
+
+  // Persist new choice
+  el.addEventListener('change', () => {
+    try { localStorage.setItem(STORAGE_KEY, el.value); } catch(_) {}
+    applyBrandFromDealership(el.value);
+  });
+
+  // Optional: allow URL preselect, e.g., ?dealer=chevrolet or ?dealer=vw
+  const params = new URLSearchParams(location.search);
+  const d = params.get('dealer');
+  if (d) {
+    const map = { chevy:'Chevrolet', chevrolet:'Chevrolet', buick:'Buick GMC', gmc:'Buick GMC', kia:'Kia', vw:'Volkswagen', volkswagen:'Volkswagen' };
+    const normalized = map[String(d).toLowerCase()];
+    if (normalized) {
+      el.value = normalized;
+      el.dispatchEvent(new Event('change'));
+    }
+  }
+
+  // Initial brand apply (in case restored or preselected)
+  applyBrandFromDealership(el.value);
+})();
+
+// Drop this helper anywhere once (prefer right under the block above)
+function applyBrandFromDealership(val){
+  const slot = document.getElementById('quirkBrand');
+  if (!slot) return;
+  const byDealer = {
+    'Chevrolet': 'assets/brands/chevrolet.svg',
+    'Buick GMC': 'assets/brands/buick-gmc.svg',
+    'Kia': 'assets/brands/kia.svg',
+    'Volkswagen': 'assets/brands/vw.svg'
+  };
+  const src = byDealer[val];
+  if (!src) return; // silently skip if no mapping
+  // swap to an <img> so it doesn't fight your SVG recolor logic
+  slot.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = src; img.alt = `${val} logo`; img.style.height = '40px'; img.style.width = 'auto';
+  slot.appendChild(img);
+}
+
 
 /* -------------------- Bootstrap years & makes if empty -------------------- */
 (function initYearsIfEmpty() {
