@@ -92,6 +92,17 @@ let decodeBtn = document.getElementById("decodeVinBtn") || $('[data-i18n="decode
 let modelStatus = document.getElementById("modelStatus") || document.getElementById("model-status");
 
 let form = document.getElementById('tradeForm');
+// Remove empty file inputs so Netlify doesn't send blank uploads
+if (form) {
+  form.addEventListener("submit", () => {
+    form.querySelectorAll('input[type="file"]').forEach(input => {
+      if (!input.files || input.files.length === 0) {
+        input.disabled = true; // Netlify ignores disabled inputs
+      }
+    });
+  });
+}
+
 
 /* -------------------- Dealership dropdown (no brand swap) -------------------- */
 (function initDealership(){
