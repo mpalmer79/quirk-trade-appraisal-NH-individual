@@ -107,53 +107,72 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 .header-title { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px; }
 .header-logo-icon { width:40px; height:40px; flex-shrink:0; }
 
-/* Utility bar */
+/* ===== Utility bar: left buttons | center dropdown | right toggle ===== */
 .utilitybar {
   display:flex;
   align-items:center;
-  gap:10px;
-  justify-content:space-between;
+  justify-content:space-between; /* left group | dropdown | right toggle */
+  gap:12px;
   margin:6px 0 14px;
   flex-wrap:wrap;
 }
 .left-actions { display:flex; gap:10px; align-items:center; }
 
-/* Dealership dropdown */
+/* Center wrapper so the select sits inline and aligns vertically */
+.dealership-wrap {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ===== Dealership dropdown (boxed, shorter, black arrow) ===== */
 #dealership {
-  font-weight: bold;
-  color: var(--ink);
-  border: 1px solid #000;
-  border-radius: 6px;
+  font-weight: bold;              /* bold “Choose Dealership” */
+  color: var(--ink);              /* black text */
+  border: 1px solid #000;         /* black border */
+  border-radius: 6px;             /* box corners */
   padding: 10px 12px;
   font-size: 16px;
-  width: auto;                /* override global */
-  min-width: 200px;
-  max-width: 260px;
+
+  /* keep it short; override global select width */
+  width: auto;
+  min-width: 180px;
+  max-width: 240px;
   display: inline-block;
-  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'><path d='M5.25 7.5L10 12.25L14.75 7.5H5.25z'/></svg>") no-repeat right 12px center/16px 16px;
+
+  background: #fff
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'><path d='M5.25 7.5L10 12.25L14.75 7.5H5.25z'/></svg>")
+    no-repeat right 12px center/16px 16px;
+
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 #dealership:hover { background-color:#f5f5f5; }
 #dealership:focus { outline:none; border-color:#000; box-shadow:0 0 0 2px rgba(0,0,0,0.15); }
 #dealership option[disabled] { color:#555; }
 
+/* ===== Buttons to match your screenshot ===== */
 .spanish-btn,
 .ghost-btn {
   font-weight:700;
   border-radius:8px;
   padding:10px 16px;
 }
+
+/* Left ghost buttons (Decode VIN & Prefill, Clear Form) */
 .ghost-btn {
-  background:#e8f5ef;
-  color:#0b7d2e;
-  border:1px solid #c8e6d7;
+  background:#e8f5ef;            /* light mint */
+  color:#0b7d2e;                  /* dark green text */
+  border:1px solid #c8e6d7;       /* subtle green border */
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 .ghost-btn:hover { background:#d9efe4; border-color:#a7dcc7; }
 .ghost-btn:focus { outline:none; box-shadow:0 0 0 3px rgba(11,125,46,.18); }
 
+/* Right solid green language button */
 .spanish-btn {
   background:var(--quirk-green);
   color:#fff;
@@ -162,7 +181,7 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 .spanish-btn:hover { background:var(--quirk-green-dark); }
 .spanish-btn:focus { outline:none; box-shadow:0 0 0 3px rgba(11,125,46,.25); }
 
-/* Phone */
+/* Phone field */
 .phone-wrapper { display:block; }
 #phone { width:15ch; min-width:15ch; max-width:15ch; }
 
@@ -184,11 +203,18 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 .smallprint { text-align:center; font-size:12px; color:#6b6b6b; margin-top:16px; }
 
 /* Branding */
-.branding { display:flex; justify-content:center; align-items:center; background:#fff; padding:10px 14px; margin-bottom:12px; }
+.branding{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background: #fff;
+  padding:10px 14px;
+  margin-bottom: 12px;
+}
 #quirkBrand { width:260px; height:64px; line-height:0; }
 #quirkBrand svg { width:100%; height:100%; display:block; }
 
-/* Mobile tweaks */
+/* --- MOBILE ONLY: stack title above logo & keep both on the white card --- */
 @media (max-width:600px){
   .header-title { display:flex !important; flex-direction:column !important; align-items:center !important; text-align:center !important; }
   .header-title .branding { order:2 !important; float:none !important; margin:12px auto 0 !important; width:100% !important; }
