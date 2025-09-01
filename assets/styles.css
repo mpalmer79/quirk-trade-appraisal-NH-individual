@@ -107,43 +107,64 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 .header-title { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px; }
 .header-logo-icon { width:40px; height:40px; flex-shrink:0; }
 
-/* Top bar with actions + language toggle */
-.utilitybar { 
-  display:flex; 
-  align-items:center; 
-  gap:10px; 
-  justify-content:space-between;   /* left tools vs right toggle */ 
-  margin: 6px 0 14px; 
-  flex-wrap:wrap;                  /* allow wrap on narrow screens */
+/* Utility bar */
+.utilitybar {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  justify-content:space-between;
+  margin:6px 0 14px;
+  flex-wrap:wrap;
 }
 .left-actions { display:flex; gap:10px; align-items:center; }
 
-/* Screen-reader only helper */
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0;
+/* Dealership dropdown */
+#dealership {
+  font-weight: bold;
+  color: var(--ink);
+  border: 1px solid #000;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 16px;
+  width: auto;                /* override global */
+  min-width: 200px;
+  max-width: 260px;
+  display: inline-block;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'><path d='M5.25 7.5L10 12.25L14.75 7.5H5.25z'/></svg>") no-repeat right 12px center/16px 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
+#dealership:hover { background-color:#f5f5f5; }
+#dealership:focus { outline:none; border-color:#000; box-shadow:0 0 0 2px rgba(0,0,0,0.15); }
+#dealership option[disabled] { color:#555; }
 
-/* Responsive grid version of the utility bar (center the dropdown) */
-@media (min-width: 0px){
-  .utilitybar { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
-  .dealership-wrap { display: flex; justify-content: center; }
-  .dealership-wrap select { min-width: 220px; }
+.spanish-btn,
+.ghost-btn {
+  font-weight:700;
+  border-radius:8px;
+  padding:10px 16px;
 }
-@media (max-width: 640px) {
-  .utilitybar { grid-template-columns: 1fr; }
-  .left-actions { display: flex; gap: 8px; }
-  .dealership-wrap { justify-content: stretch; }
-  .dealership-wrap select { width: 100%; }
+.ghost-btn {
+  background:#e8f5ef;
+  color:#0b7d2e;
+  border:1px solid #c8e6d7;
 }
+.ghost-btn:hover { background:#d9efe4; border-color:#a7dcc7; }
+.ghost-btn:focus { outline:none; box-shadow:0 0 0 3px rgba(11,125,46,.18); }
 
-/* Phone field */
+.spanish-btn {
+  background:var(--quirk-green);
+  color:#fff;
+  border:none;
+}
+.spanish-btn:hover { background:var(--quirk-green-dark); }
+.spanish-btn:focus { outline:none; box-shadow:0 0 0 3px rgba(11,125,46,.25); }
+
+/* Phone */
 .phone-wrapper { display:block; }
-#phone {
-  width: 15ch;
-  min-width: 15ch;
-  max-width: 15ch;
-}
+#phone { width:15ch; min-width:15ch; max-width:15ch; }
 
 .hint { font-size:12px; color:var(--muted); margin-top:6px; }
 .spinner { display:inline-block; width:16px; height:16px; border:2px solid #ddd; border-top-color: var(--quirk-green); border-radius:50%; animation: spin 0.7s linear infinite; vertical-align:middle; }
@@ -163,43 +184,15 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 .smallprint { text-align:center; font-size:12px; color:#6b6b6b; margin-top:16px; }
 
 /* Branding */
-.branding{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background: #fff;
-  padding:10px 14px;
-  margin-bottom: 12px;
-}
+.branding { display:flex; justify-content:center; align-items:center; background:#fff; padding:10px 14px; margin-bottom:12px; }
+#quirkBrand { width:260px; height:64px; line-height:0; }
+#quirkBrand svg { width:100%; height:100%; display:block; }
 
-#quirkBrand {
-  width: 260px;
-  height: 64px;
-  line-height: 0;
+/* Mobile tweaks */
+@media (max-width:600px){
+  .header-title { display:flex !important; flex-direction:column !important; align-items:center !important; text-align:center !important; }
+  .header-title .branding { order:2 !important; float:none !important; margin:12px auto 0 !important; width:100% !important; }
+  .header-title h1 { order:1 !important; margin:0 0 8px 0 !important; }
+  #quirkBrand { display:flex !important; justify-content:center !important; }
+  #quirkBrand svg, #quirkBrand img { width:180px !important; height:auto !important; max-width:90% !important; }
 }
-#quirkBrand svg { width: 100%; height: 100%; display: block; }
-
-/* --- MOBILE ONLY: stack title above logo & keep both on the white card --- */
-@media (max-width: 600px) {
-  .header-title { display: flex !important; flex-direction: column !important; align-items: center !important; text-align: center !important; }
-  .header-title .branding { order: 2 !important; float: none !important; margin: 12px auto 0 !important; width: 100% !important; }
-  .header-title h1 { order: 1 !important; margin: 0 0 8px 0 !important; }
-  #quirkBrand { display: flex !important; justify-content: center !important; }
-  #quirkBrand svg, #quirkBrand img { width: 180px !important; height: auto !important; max-width: 90% !important; }
-}
-
-/* =================== Dealership dropdown (final spec) =================== */
-#dealership {
-  font-weight: bold;               /* bold text */
-  color: var(--ink);               /* black text */
-  border: 1px solid #000;          /* black border */
-  border-radius: 6px;              /* box corners */
-  padding: 10px 12px;
-  font-size: 16px;
-  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'><path d='M5.25 7.5L10 12.25L14.75 7.5H5.25z'/></svg>") no-repeat right 12px center/16px 16px;
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-#dealership:hover { background-color: #f5f5f5; }
-#dealership:focus  { outline: none; border-color: #000; box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
-#dealership option[disabled] { color: #555; }
