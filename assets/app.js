@@ -1,15 +1,13 @@
 /* assets/app.js
    Quirk Sight-Unseen Trade Tool
-   - VIN decode (NHTSA VPIC) to prefill Year / Make / Model / Trim
-   - Make/Model loading for chosen Year+Make
-   - Case-insensitive select setting (adds option if missing so the value “sticks”)
-   - Language toggle (English ↔ Español) persisted in localStorage('quirk_lang')
-   - Dealership dropdown persisted in localStorage('quirk_dealership')
-   - Captures UTM + referrer fields
-   - Prevents empty file inputs from being posted (stops “tiny blank uploads” emails)
+   - VIN decode (NHTSA VPIC) -> prefill Year/Make/Model/Trim
+   - Model loader (Make + Year)
+   - Dealership selector (no sticky default; sessionStorage only for success page branding)
+   - i18n EN <-> ES (defaults to EN; remembers user choice)
+   - Quirk logo injection & recolor (always visible)
 */
 
-/* -------------------- tiny helpers -------------------- */
+/* -------------------- Small utilities -------------------- */
 const $ = (sel) => document.querySelector(sel);
 
 function debounce(fn, wait = 500) {
@@ -60,7 +58,7 @@ function setSelectValueCaseInsensitive(selectEl, value) {
   return true;
 }
 
-/** Ensures numeric year exists; inserts in descending order if needed */
+/** Ensures numeric year exists in the list; inserts in descending order if needed */
 function setYearSelectValue(selectEl, year) {
   if (!selectEl || !year) return false;
   const y = String(year).trim();
@@ -100,26 +98,21 @@ let modelStatus = document.getElementById("modelStatus") || document.getElementB
 
 let form = document.getElementById('tradeForm');
 
-/* -------------------- Dealership dropdown (persist only) -------------------- */
+/* -------------------- Dealership dropdown behavior -------------------- */
 (function initDealership(){
-  const STORAGE_KEY = 'quirk_dealership';
   const el = document.getElementById('dealership');
   if (!el) return;
 
-  // Restore previous choice (if any)
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && [...el.options].some(o => o.value === saved)) {
-      el.value = saved;
-    }
-  } catch(_) {}
+  // Always start from placeholder (no persistent default)
+  el.value = "";
 
-  // Persist new choice
+  // Save only for THIS session so success page can brand itself
   el.addEventListener('change', () => {
-    try { localStorage.setItem(STORAGE_KEY, el.value); } catch(_) {}
+    try { sessionStorage.setItem('quirk_dealership', el.value || ""); } catch(_) {}
+    applyBrandFromDealership(el.value);
   });
 
-  // Optional URL preselect, e.g. ?dealer=kia
+  // Optional URL preselect (?dealer=kia etc.)
   const params = new URLSearchParams(location.search);
   const d = params.get('dealer');
   if (d) {
@@ -130,12 +123,39 @@ let form = document.getElementById('tradeForm');
       vw:'Volkswagen', volkswagen:'Volkswagen'
     };
     const normalized = map[String(d).toLowerCase()];
-    if (normalized && [...el.options].some(o => o.value === normalized)) {
+    if (normalized) {
       el.value = normalized;
-      try { localStorage.setItem(STORAGE_KEY, normalized); } catch(_) {}
+      el.dispatchEvent(new Event('change'));
     }
   }
 })();
+
+function applyBrandFromDealership(val){
+  const slot = document.getElementById('quirkBrand');
+  if (!slot) return;
+
+  if (!val) {
+    // No dealer selected -> keep standard Quirk logo (injected below)
+    return;
+  }
+
+  const MAP = {
+    'Chevrolet'  : 'assets/brands/chevrolet-quirk.svg',
+    'Buick GMC'  : 'assets/brands/buick-gmc-quirk.svg',
+    'Kia'        : 'assets/brands/kia-quirk.svg',
+    'Volkswagen' : 'assets/brands/vw-quirk.svg'
+  };
+  const src = MAP[val];
+  if (!src) return;
+
+  slot.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = `${val} logo`;
+  img.style.height = '40px';
+  img.style.width = 'auto';
+  slot.appendChild(img);
+}
 
 /* -------------------- Bootstrap years & makes if empty -------------------- */
 (function initYearsIfEmpty() {
@@ -193,7 +213,6 @@ async function loadModels() {
   modelsAborter = new AbortController();
 
   try {
-    // VPIC: get models for a make+year
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformakeyear/makeyear/${encodeURIComponent(make)}/modelyear/${encodeURIComponent(year)}?format=json`;
 
     const res = await fetchWithTimeout(url, { timeout: 15000, signal: modelsAborter.signal });
@@ -258,16 +277,22 @@ async function decodeVin(vinRaw) {
     const row = (data && data.Results && data.Results[0]) || {};
     const decYear  = row.ModelYear || row.Model_Year || "";
     const decMake  = row.Make || "";
-    const decModel = row.Model || "";
+    const decModel = row.Model || row.Model_Name || "";
     const decTrim  = row.Trim || row.Series || "";
 
-    if (decYear)  setYearSelectValue(yearSel, decYear);
-    if (decMake)  setSelectValueCaseInsensitive(makeSel, decMake);
+    // 1) Year
+    if (decYear) setYearSelectValue(yearSel, decYear);
 
-    // Load models for Make+Year before setting Model
+    // 2) Make
+    if (decMake) setSelectValueCaseInsensitive(makeSel, decMake);
+
+    // 3) Load models for Make+Year before setting Model
     await loadModels();
 
+    // 4) Model
     if (decModel) setSelectValueCaseInsensitive(modelSel, decModel);
+
+    // 5) Trim
     if (trimInput && decTrim && !trimInput.value) trimInput.value = decTrim;
 
     lastDecodedVin = vin;
@@ -278,27 +303,20 @@ async function decodeVin(vinRaw) {
   }
 }
 
-/* Hook up VIN decode actions */
+/* Hook up decode actions */
 decodeBtn?.addEventListener("click", (e) => {
   e.preventDefault();
   const v = vinInput?.value || "";
   decodeVin(v);
 });
 
-if (vinInput) {
-  // Normalize typing + debounce decode
-  vinInput.addEventListener('input', (e) => {
-    e.target.value = String(e.target.value || '').toUpperCase().replace(/[IOQ\s]/g,'');
-  });
-
-  vinInput.addEventListener(
-    "input",
-    debounce(() => {
-      const v = vinInput.value || "";
-      if (validVin(v)) decodeVin(v);
-    }, 600)
-  );
-}
+vinInput?.addEventListener(
+  "input",
+  debounce(() => {
+    const v = vinInput.value || "";
+    if (validVin(v)) decodeVin(v);
+  }, 600)
+);
 
 /* -------------------- Quirk logo injection & recolor (always visible) -------------------- */
 (async function injectAndRecolorQuirkLogo(){
@@ -341,17 +359,18 @@ if (vinInput) {
   }
 })();
 
-/* -------------------- i18n: English <-> Spanish -------------------- */
+/* -------------------- Full i18n: English <-> Spanish -------------------- */
 (function i18nFull(){
   const LANG_KEY = "quirk_lang";
 
-  // EN → ES dictionary (keys are EN)
+  // EN -> ES dictionary (keyed by visible EN text)
   const MAP_EN_ES = new Map([
     // Headings / intro
     ["Sight Unseen Trade-In Appraisal", "Tasación de intercambio sin inspección"],
-    ["Welcome to the Quirk Auto Dealers Sight Unseen Appraisal Program", "Bienvenido al programa de tasación sin inspección de Quirk Auto Dealers"],
+    ["Welcome to the Quirk Auto Dealers Sight Unseen Appraisal Program",
+     "Bienvenido al programa de tasación sin inspección de Quirk Auto Dealers"],
     ["Please fill out this form with accurate and complete details about your vehicle. The trade-in value we provide will be honored as long as the vehicle condition matches your answers. We'll verify everything when you bring the vehicle in. If the condition differs, the offer will be adjusted accordingly.",
-      "Complete este formulario con información precisa y completa sobre su vehículo. El valor de canje se respetará siempre que la condición del vehículo coincida con sus respuestas. Verificaremos todo cuando traiga el vehículo. Si la condición difiere, la oferta se ajustará en consecuencia."],
+     "Complete este formulario con información precisa y completa sobre su vehículo. El valor de canje se respetará siempre que la condición del vehículo coincida con sus respuestas. Verificaremos todo cuando traiga el vehículo. Si la condición difiere, la oferta se ajustará en consecuencia."],
     ["Tell us about Yourself", "Cuéntenos sobre usted"],
     ["Vehicle Details", "Detalles del vehículo"],
     ["Vehicle Condition", "Condición del vehículo"],
@@ -364,7 +383,7 @@ if (vinInput) {
     ["Clear Form", "Limpiar formulario"],
     ["Get My Trade Appraisal", "Obtener mi tasación"],
     ["versión en español", "versión en español"],
-    ["English version", "Versión en inglés"],
+    ["Versión en inglés", "Versión en inglés"],
 
     // Customer info
     ["Full Name", "Nombre completo"],
@@ -421,13 +440,13 @@ if (vinInput) {
     // Photos
     ["Exterior Photos", "Fotos del exterior"],
     ["Interior Photos", "Fotos del interior"],
-    ["Dashboard / Odometer", "Tablero / odómetro"],
-    ["Damage / Flaws", "Daños / defectos"],
+    ["Dashboard / Odometer", "Tablero / Odómetro"],
+    ["Damage / Flaws", "Daños / Defectos"],
     ["Max 10MB per file; 24 files total.", "Máx. 10 MB por archivo; 24 archivos en total."],
 
     // Final section
     ["I confirm the information provided is accurate to the best of my knowledge. I understand that the appraisal value may change if the vehicle's actual condition does not match the details above.",
-      "Confirmo que la información proporcionada es precisa según mi leal saber y entender. Entiendo que el valor de tasación puede cambiar si la condición real del vehículo no coincide con los detalles anteriores."],
+     "Confirmo que la información proporcionada es precisa según mi leal saber y entender. Entiendo que el valor de tasación puede cambiar si la condición real del vehículo no coincide con los detalles anteriores."],
     ["I agree and confirm", "Acepto y confirmo"],
 
     // Generic choices
@@ -452,13 +471,26 @@ if (vinInput) {
   function applyLang(target){
     const lang = (target === "es") ? "es" : "en";
 
-    // Elements with data-i18n: translate based on the key (attribute) first, then fallback to current text
+    // data-i18n keyed elements
     document.querySelectorAll("[data-i18n]").forEach(el => {
       const key = el.getAttribute("data-i18n").trim();
-      const curr = (el.textContent || "").trim();
+      const curr = el.textContent.trim();
       const viaKey = translateText(key, lang);
       const viaCurr = translateText(curr, lang);
       const next = (viaKey !== key ? viaKey : viaCurr);
+      if (next && next !== curr) el.textContent = next;
+    });
+
+    // Generic visible text
+    const selectors = [
+      "label","legend","h1","h2","h3","h4",
+      "button","a.btn","span","p","small","strong","em","th","td","option"
+    ];
+    document.querySelectorAll(selectors.join(",")).forEach(el => {
+      if (el.hasAttribute("data-i18n")) return;
+      const curr = el.textContent ? el.textContent.trim() : "";
+      if (!curr) return;
+      const next = translateText(curr, lang);
       if (next && next !== curr) el.textContent = next;
     });
 
@@ -469,19 +501,19 @@ if (vinInput) {
       if (next && next !== ph) el.setAttribute("placeholder", next);
     });
 
-    // aria-label / title
+    // aria-label / title attributes
     document.querySelectorAll("[aria-label]").forEach(el => {
       const v = el.getAttribute("aria-label");
-      const n = translateText(v, lang);
-      if (n && n !== v) el.setAttribute("aria-label", n);
+      const next = translateText(v, lang);
+      if (next && next !== v) el.setAttribute("aria-label", next);
     });
     document.querySelectorAll("[title]").forEach(el => {
       const v = el.getAttribute("title");
-      const n = translateText(v, lang);
-      if (n && n !== v) el.setAttribute("title", n);
+      const next = translateText(v, lang);
+      if (next && next !== v) el.setAttribute("title", next);
     });
 
-    // Language toggle label + pressed state
+    // Toggle button label
     const toggle = document.getElementById("langToggle");
     if (toggle) {
       toggle.textContent = (lang === "es") ? "Versión en inglés" : "versión en español";
@@ -489,11 +521,11 @@ if (vinInput) {
       if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
     }
 
-    // Set <html lang> and persist
     document.documentElement.setAttribute("lang", lang);
     try { localStorage.setItem(LANG_KEY, lang); } catch(_) {}
   }
 
+  // Wire the toggle
   const toggle = document.getElementById("langToggle");
   if (toggle) {
     if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
@@ -504,58 +536,15 @@ if (vinInput) {
     });
   }
 
-  // Initial language: URL override (?lang=es) > saved > default en
+  // DEFAULT: English, unless URL or saved value explicitly says otherwise
   const params = new URLSearchParams(location.search);
   const urlLang = params.get("lang");
-  const saved = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
-  applyLang(urlLang === "es" || urlLang === "en" ? urlLang : saved);
-})();
-
-/* -------------------- UTM + referrer capture -------------------- */
-(function captureAttribution(){
-  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-
-  try {
-    setVal('referrer', document.referrer || '');
-    setVal('landingPage', window.location.href || '');
-
-    const p = new URLSearchParams(window.location.search);
-    setVal('utmSource',   p.get('utm_source')   || '');
-    setVal('utmMedium',   p.get('utm_medium')   || '');
-    setVal('utmCampaign', p.get('utm_campaign') || '');
-    setVal('utmTerm',     p.get('utm_term')     || '');
-    setVal('utmContent',  p.get('utm_content')  || '');
-  } catch(_){}
-})();
-
-/* -------------------- Clear form button -------------------- */
-(function hookClear(){
-  const btn = document.getElementById('clearBtn');
-  if (!btn || !form) return;
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    form.reset();
-    // Reset models list
-    resetModels(true);
-  });
-})();
-
-/* -------------------- Before submit: sanitize & drop empty file inputs -------------------- */
-(function hookSubmit(){
-  if (!form) return;
-  form.addEventListener('submit', () => {
-    // phoneRaw: digits only version
-    const phone = document.getElementById('phone');
-    const phoneRaw = document.getElementById('phoneRaw');
-    if (phone && phoneRaw) {
-      phoneRaw.value = (phone.value || '').replace(/\D+/g,'');
-    }
-
-    // Remove empty file inputs to prevent blank attachments
-    form.querySelectorAll('input[type="file"]').forEach(input => {
-      if (!input.files || input.files.length === 0) {
-        input.parentNode && input.parentNode.removeChild(input);
-      }
-    });
-  });
+  let initial = "en";
+  if (urlLang === "es" || urlLang === "en") {
+    initial = urlLang;
+  } else {
+    const saved = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
+    if (saved === "es") initial = "es";
+  }
+  applyLang(initial);
 })();
