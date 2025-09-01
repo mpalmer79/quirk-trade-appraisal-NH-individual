@@ -338,3 +338,179 @@ if (vinInput && validVin(vinInput.value)) decodeVin(vinInput.value);
     slot.appendChild(img);
   }
 })();
+/* -------------------- Full i18n: English <-> Spanish -------------------- */
+(function i18nQuirk(){
+  const LANG_KEY = "quirk_lang";
+
+  // EN -> ES dictionary (keys = stable tokens, not the live text)
+  const D = {
+    // Headline + intros
+    title: ["Sight Unseen Trade-In Appraisal", "Formulario de Tasación sin Inspección"],
+    welcome: [
+      "Welcome to the Quirk Auto Dealers Sight Unseen Appraisal Program",
+      "Bienvenido al programa de tasación sin inspección de Quirk Auto Dealers"
+    ],
+    instructions: [
+      "Please fill out this form with accurate and complete details about your vehicle. The trade-in value we provide will be honored as long as the vehicle condition matches your answers. We'll verify everything when you bring the vehicle in. If the condition differs, the offer will be adjusted accordingly.",
+      "Complete este formulario con información precisa y completa sobre su vehículo. El valor de intercambio se respetará siempre que la condición del vehículo coincida con sus respuestas. Verificaremos todo cuando traiga el vehículo. Si la condición difiere, la oferta se ajustará en consecuencia."
+    ],
+
+    // Top buttons
+    decodeVinBtn: ["Decode VIN & Prefill", "Decodificar VIN y autocompletar"],
+    clearBtn:     ["Clear Form", "Limpiar formulario"],
+
+    // Section titles
+    aboutYou:     ["Tell us about Yourself", "Cuéntenos sobre usted"],
+    vehDetails:   ["Vehicle Details", "Detalles del Vehículo"],
+    vehCondition: ["Vehicle Condition", "Condición del Vehículo"],
+    wearables:    ["Wearable Items Check", "Revisión de Elementos Desgastables"],
+    photos:       ["Photo Uploads (Optional)", "Cargas de Fotos (Opcional)"],
+    finalDisclaimerTitle: ["Final Disclaimer", "Descargo de Responsabilidad Final"],
+
+    // Customer info
+    nameLabel:   ["Full Name", "Nombre completo"],
+    phoneLabel:  ["Phone Number", "Número de teléfono"],
+    emailLabel:  ["Email Address", "Correo electrónico"],
+    phoneHint:   ["", ""], // keep empty if you don't need a Spanish hint
+
+    // VIN + vehicle
+    vinLabel:    ["VIN (required)", "VIN (obligatorio)"],
+    vinHint:     ["VIN auto-capitalizes; letters I, O, Q are invalid.", "El VIN se capitaliza automáticamente; las letras I, O y Q no son válidas."],
+    mileageLabel:["Current Mileage", "Kilometraje actual"],
+
+    yearLabel:   ["Year", "Año"],
+    makeLabel:   ["Make", "Marca"],
+    modelLabel:  ["Model", "Modelo"],
+    trimLabel:   ["Trim Level (if known)", "Versión (si se conoce)"],
+    selectYear:  ["Select Year", "Seleccione año"],
+    selectMake:  ["Select Make", "Seleccione marca"],
+    selectModel: ["Select Model", "Seleccione modelo"],
+
+    // Colors, title, owners
+    extColorLabel: ["Exterior Color", "Color exterior"],
+    intColorLabel: ["Interior Color", "Color interior"],
+    keysLabel:     ["Number of Keys Included", "Número de llaves incluidas"],
+    titleStatus:   ["Title Status", "Estado del título"],
+    titleClean:    ["Clean", "Limpio"],
+    titleLien:     ["Lien", "Gravamen"],
+    titleRebuilt:  ["Rebuilt", "Reconstruido"],
+    titleSalvage:  ["Salvage", "Pérdida total"],
+
+    ownersLabel:   ["Number of Owners (estimate OK)", "Número de dueños (estimación aceptable)"],
+    accidentLabel: ["Has the vehicle ever been in an accident?", "¿El vehículo ha tenido algún accidente?"],
+    accidentRepair:["If yes, was it professionally repaired?", "Si la respuesta es sí, ¿fue reparado profesionalmente?"],
+
+    // Condition
+    warnings:     ["Any warning lights on dashboard?", "¿Alguna luz de advertencia en el tablero?"],
+    mech:         ["Mechanical issues", "Problemas mecánicos"],
+    cosmetic:     ["Cosmetic issues", "Problemas cosméticos"],
+    interior:     ["Interior clean and damage-free?", "¿Interior limpio y sin daños?"],
+    mods:         ["Aftermarket parts or modifications?", "¿Piezas o modificaciones no originales?"],
+    smells:       ["Unusual smells?", "¿Olores inusuales?"],
+    service:      ["Routine services up to date?", "¿Servicios de rutina al día?"],
+
+    // Wearables
+    tires:        ["Tire Condition", "Estado de los neumáticos"],
+    brakes:       ["Brake Condition", "Estado de los frenos"],
+    wearOther:    ["Other Wear Items (issues?)", "Otros elementos desgastables (¿problemas?)"],
+    New:          ["New", "Nuevos"],
+    Good:         ["Good", "Buenos"],
+    Worn:         ["Worn", "Gastados"],
+    "Needs Replacement": ["Needs Replacement", "Requieren reemplazo"],
+
+    // Photos
+    photosExterior:["Exterior Photos", "Fotos del exterior"],
+    photosInterior:["Interior Photos", "Fotos del interior"],
+    photosDash:    ["Dashboard / Odometer", "Tablero / Odómetro"],
+    photosDamage:  ["Damage / Flaws", "Daños / Defectos"],
+    photoHint:     ["Max 10MB per file; 24 files total.", "Máx. 10 MB por archivo; 24 archivos en total."],
+
+    // Final / submit
+    finalDisclaimer: [
+      "I confirm the information provided is accurate to the best of my knowledge. I understand that the appraisal value may change if the vehicle's actual condition does not match the details above.",
+      "Confirmo que la información proporcionada es precisa según mi leal saber y entender. Entiendo que el valor de tasación puede cambiar si la condición real del vehículo no coincide con los detalles anteriores."
+    ],
+    agreeLabel: ["I agree and confirm", "Acepto y confirmo"],
+    submit:     ["Get My Trade Appraisal", "Obtener mi tasación"],
+
+    // Placeholders
+    vinPlaceholder: ["Enter 17 digit VIN", "Ingrese el VIN de 17 caracteres"],
+    mileagePlaceholder: ["e.g., 45000", "p. ej., 45000"],
+    phonePlaceholder: ["(###) ###-####", "(###) ###-####"],
+
+    // Dealership dropdown default text
+    dealershipPlaceholder: ["Choose Dealership", "Seleccione concesionario"]
+  };
+
+  function tr(key, lang){
+    const arr = D[key];
+    if (!arr) return null;
+    return lang === "es" ? arr[1] : arr[0];
+  }
+
+  function applyLang(target){
+    const lang = (target === "es") ? "es" : "en";
+    document.documentElement.setAttribute("lang", lang);
+
+    // Translate elements that have data-i18n="token"
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const token = el.getAttribute("data-i18n").trim();
+      const next = tr(token, lang);
+      if (!next) return;
+
+      // For option/inputs with placeholder-like content, handle attributes too
+      if (el.tagName === "OPTION") {
+        el.textContent = next;
+      } else {
+        el.textContent = next;
+      }
+    });
+
+    // Placeholders
+    const vin = document.getElementById("vin");
+    if (vin) vin.setAttribute("placeholder", tr("vinPlaceholder", lang) || vin.getAttribute("placeholder"));
+
+    const mileage = document.getElementById("mileage");
+    if (mileage) mileage.setAttribute("placeholder", tr("mileagePlaceholder", lang) || mileage.getAttribute("placeholder"));
+
+    const phone = document.getElementById("phone");
+    if (phone) phone.setAttribute("placeholder", tr("phonePlaceholder", lang) || phone.getAttribute("placeholder"));
+
+    // Dealership default option text (if still default)
+    const dealer = document.getElementById("dealership");
+    if (dealer && dealer.options && dealer.options.length) {
+      const first = dealer.options[0];
+      if (first && first.disabled) {
+        first.textContent = tr("dealershipPlaceholder", lang) || first.textContent;
+      }
+    }
+
+    // Toggle button label
+    const toggle = document.getElementById("langToggle");
+    if (toggle) {
+      toggle.textContent = (lang === "es") ? "Versión en inglés" : "versión en español";
+      toggle.setAttribute("aria-pressed", String(lang === "es"));
+      if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
+    }
+
+    // Persist
+    try { localStorage.setItem(LANG_KEY, lang); } catch(_) {}
+  }
+
+  // Wire toggle
+  const toggle = document.getElementById("langToggle");
+  if (toggle) {
+    if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const current = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
+      applyLang(current === "en" ? "es" : "en");
+    });
+  }
+
+  // Initial language: URL ?lang=es > saved > default en
+  const params = new URLSearchParams(location.search);
+  const urlLang = (params.get("lang") || "").toLowerCase();
+  const saved = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
+  applyLang(urlLang === "es" || urlLang === "en" ? urlLang : saved);
+})();
