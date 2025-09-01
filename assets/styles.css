@@ -252,3 +252,33 @@ background: #fff;
     max-width: 90% !important;
   }
 }
+/* Add this to assets/styles.css */
+
+#dealership {
+  color: #0b7d2e;
+  border: 2px solid #0b7d2e;
+  border-radius: 9999px; /* pill style */
+  padding: 10px 18px;
+  font-size: 16px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%230b7d2e'><path d='M5.25 7.5L10 12.25L14.75 7.5H5.25z'/></svg>") no-repeat right 12px center/16px 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+#dealership:hover {
+  background-color: rgba(11, 125, 46, 0.05); /* subtle green tint */
+}
+
+#dealership:focus {
+  outline: none;
+  border-color: #0b7d2e;
+  box-shadow: 0 0 0 3px rgba(11, 125, 46, 0.25);
+}
+
+#dealership option[disabled] {
+  color: #0b7d2e;
+  opacity: 0.7;
+}
+
