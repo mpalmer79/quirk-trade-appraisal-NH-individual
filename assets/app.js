@@ -1,4 +1,4 @@
-/* assets/app.js
+/* assets/app.js 
    Quirk Sight-Unseen Trade Tool
    - VIN decode (NHTSA VPIC) -> prefill Year/Make/Model/Trim
    - Model loader (Make + Year)
@@ -362,6 +362,7 @@ vinInput?.addEventListener(
 /* -------------------- Full i18n: English <-> Spanish -------------------- */
 (function i18nFull(){
   const LANG_KEY = "quirk_lang";
+  const LANG_SESSION_KEY = "quirk_lang_session"; // success page prefers this
 
   // EN -> ES dictionary (keyed by visible EN text)
   const MAP_EN_ES = new Map([
@@ -522,7 +523,11 @@ vinInput?.addEventListener(
     }
 
     document.documentElement.setAttribute("lang", lang);
-    try { localStorage.setItem(LANG_KEY, lang); } catch(_) {}
+    // Persist for continuity (success page prefers sessionStorage)
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+      sessionStorage.setItem(LANG_SESSION_KEY, lang);
+    } catch(_) {}
   }
 
   // Wire the toggle
@@ -531,20 +536,15 @@ vinInput?.addEventListener(
     if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
     toggle.addEventListener("click", (e) => {
       e.preventDefault();
-      const curr = (localStorage.getItem(LANG_KEY) || "en");
+      // Flip based on current <html lang>, not localStorage
+      const curr = (document.documentElement.getAttribute("lang") || "en").toLowerCase();
       applyLang(curr === "en" ? "es" : "en");
     });
   }
 
-  // DEFAULT: English, unless URL or saved value explicitly says otherwise
+  // DEFAULT: Always English unless URL explicitly sets ?lang=es|en
   const params = new URLSearchParams(location.search);
-  const urlLang = params.get("lang");
-  let initial = "en";
-  if (urlLang === "es" || urlLang === "en") {
-    initial = urlLang;
-  } else {
-    const saved = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
-    if (saved === "es") initial = "es";
-  }
+  const urlLang = (params.get("lang") || "").toLowerCase();
+  const initial = (urlLang === "es" || urlLang === "en") ? urlLang : "en";
   applyLang(initial);
 })();
