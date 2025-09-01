@@ -3,32 +3,63 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Thanks! - Quirk Auto</title>
+  <meta name="robots" content="noindex" />
+  <title>Thanks! · Quirk Auto</title>
   <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    /* simple centered card (reuses your styles.css tokens/colors) */
+    main {
+      max-width: 720px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 { color: #004a2f; margin: 0 0 10px; }
+    p.lead { margin: 0 0 18px; }
+    .btnrow { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+    .btnrow a { text-decoration: none; }
+    /* make buttons stack on narrow screens */
+    @media (max-width: 560px){
+      .btnrow { flex-direction: column; }
+    }
+    /* logo image */
+    .brand-img {
+      width: 100%;
+      max-width: 720px;
+      height: auto;
+      display: block;
+      margin: 32px auto 0;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <main style="max-width:720px;margin:40px auto;background:#fff;padding:24px;
-               border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)">
-    <h1 style="text-align:center;margin:0 0 10px;color:#004a2f">Thank you!</h1>
-    <p style="text-align:center;font-size:16px">
+  <main>
+    <h1 id="thanksTitle">Thank you!</h1>
+    <p id="thanksMsg" class="lead">
       We received your trade-in details. A Quirk specialist will contact you shortly.
     </p>
 
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px">
-      <a class="spanish-btn" href="/" style="text-decoration:none">
-        Submit another vehicle
-      </a>
-      <a class="ghost-btn" href="https://www.quirkcars.com/" target="_blank" 
-         rel="noopener noreferrer" style="text-decoration:none">
+    <div class="btnrow">
+      <!-- Back to form -->
+      <a id="btnAgain" class="spanish-btn" href="/">Submit another vehicle</a>
+
+      <!-- Brand site (text + URL set by success.js) -->
+      <a id="btnBack" class="ghost-btn" href="https://www.quirkcars.com/" target="_blank" rel="noopener noreferrer">
         Back to Quirk Auto
       </a>
     </div>
 
-     <!-- Logo inside same white card -->
-  <div style="margin-top:32px; text-align:center;">
-    <a href="https://www.quirkcars.com/" target="_blank" rel="noopener noreferrer">
-      <img src="/assets/quirkworks-new.jpg" alt="Quirk Works Logo"
-           style="width:100%; max-width:720px; height:auto; display:block; margin:0 auto; cursor:pointer;" />
+    <!-- Clickable “Quirk Works” brand image (URL replaced by success.js) -->
+    <a id="brandLink" href="https://www.quirkcars.com/" target="_blank" rel="noopener noreferrer">
+      <img class="brand-img" src="/assets/quirkworks-new.jpg" alt="Quirk Works Logo" />
     </a>
-  </div>
+  </main>
 
+  <!-- Dealer + language logic for this success page -->
+  <script src="/assets/success.js"></script>
+</body>
+</html>
