@@ -109,6 +109,41 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
 
 /* Top bar with actions + language toggle */
 .utilitybar {
+  /* Visually hidden, but screen-reader available */
+.sr-only {
+position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+overflow: hidden; clip: rect(0, 0, 1px, 1px); white-space: nowrap; border: 0;
+}
+
+
+.utilitybar {
+display: grid;
+grid-template-columns: auto 1fr auto; /* left buttons | middle flex | lang button */
+gap: 12px;
+align-items: center;
+}
+
+
+.dealership-wrap { display: flex; justify-content: center; }
+
+
+.dealership-wrap select {
+min-width: 220px;
+padding: 10px 12px;
+border: 1px solid #c7d1cc;
+border-radius: 8px;
+font-size: 16px;
+background: #fff;
+}
+
+
+/* Responsive: stack on small screens */
+@media (max-width: 640px) {
+.utilitybar { grid-template-columns: 1fr; }
+.left-actions { display: flex; gap: 8px; }
+.dealership-wrap { justify-content: stretch; }
+.dealership-wrap select { width: 100%; }
+}
   display:flex;
   align-items:center;
   gap:10px;
