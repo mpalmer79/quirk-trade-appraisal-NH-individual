@@ -1,9 +1,9 @@
 /* assets/app.js
    Quirk Sight-Unseen Trade Tool
-   - VIN decode + model loader (NHTSA VPIC)
-   - Dealership dropdown & brand swap
-   - English/Spanish toggle (localStorage)
-   - Logo SVG injection with dealership guard
+   - VIN decode (NHTSA VPIC) -> prefill Year/Make/Model/Trim
+   - Model loader for Make+Year
+   - Dealership dropdown (no brand swap; Quirk logo stays constant)
+   - Quirk logo SVG injection + recolor
 */
 
 /* -------------------- Small utilities -------------------- */
@@ -93,58 +93,38 @@ let modelStatus = document.getElementById("modelStatus") || document.getElementB
 
 let form = document.getElementById('tradeForm');
 
-/* -------------------- Dealership dropdown behavior -------------------- */
+/* -------------------- Dealership dropdown (no brand swap) -------------------- */
 (function initDealership(){
   const STORAGE_KEY = 'quirk_dealership';
   const el = document.getElementById('dealership');
   if (!el) return;
 
-  // restore previous choice (if any)
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && [...el.options].some(o => o.value === saved)) el.value = saved;
-  } catch(_) {}
+  // Style placeholder state (CSS will target .placeholder)
+  function syncPlaceholderStyle(){
+    if (!el.value) el.classList.add('placeholder');
+    else el.classList.remove('placeholder');
+  }
 
-  el.addEventListener('change', () => {
-    try { localStorage.setItem(STORAGE_KEY, el.value); } catch(_) {}
-    applyBrandFromDealership(el.value);
-  });
-
-  // allow URL preselect (?dealer=kia, ?dealer=vw, etc.)
+  // Do NOT restore saved selection on load — keep placeholder & Quirk logo.
+  // URL override still allowed: ?dealer=kia, ?dealer=vw, etc.
   const params = new URLSearchParams(location.search);
   const d = params.get('dealer');
   if (d) {
     const map = { chevy:'Chevrolet', chevrolet:'Chevrolet', buick:'Buick GMC', gmc:'Buick GMC', kia:'Kia', vw:'Volkswagen', volkswagen:'Volkswagen' };
     const normalized = map[String(d).toLowerCase()];
-    if (normalized) {
-      el.value = normalized;
-      el.dispatchEvent(new Event('change'));
-    }
+    if (normalized) el.value = normalized;
   }
 
-  // initial brand apply
-  applyBrandFromDealership(el.value);
+  // Persist new choice when user changes it (no brand swap)
+  el.addEventListener('change', () => {
+    syncPlaceholderStyle();
+    try { localStorage.setItem(STORAGE_KEY, el.value); } catch(_) {}
+    // No brand swapping here—Quirk logo stays constant.
+  });
+
+  // Initial UI state
+  syncPlaceholderStyle();
 })();
-
-function applyBrandFromDealership(val){
-  const slot = document.getElementById('quirkBrand');
-  if (!slot) return;
-
-  const MAP = {
-    'Chevrolet'  : 'assets/brands/chevrolet-quirk.svg',
-    'Buick GMC'  : 'assets/brands/buick-gmc-quirk.svg',
-    'Kia'        : 'assets/brands/kia-quirk.svg',
-    'Volkswagen' : 'assets/brands/vw-quirk.svg'
-  };
-  const src = MAP[val];
-  if (!src) return;
-
-  slot.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = src; img.alt = `${val} logo`; img.style.height = '40px'; img.style.width = 'auto';
-  slot.setAttribute('data-brand-applied','1'); // guard for logo recolor
-  slot.appendChild(img);
-}
 
 /* -------------------- Bootstrap years & makes if empty -------------------- */
 (function initYearsIfEmpty() {
@@ -202,7 +182,7 @@ async function loadModels() {
   modelsAborter = new AbortController();
 
   try {
-    // ✅ Correct VPIC endpoint
+    // ✅ correct VPIC endpoint
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformakeyear/makeyear/${encodeURIComponent(make)}/modelyear/${encodeURIComponent(year)}?format=json`;
 
     const res = await fetchWithTimeout(url, { timeout: 15000, signal: modelsAborter.signal });
@@ -256,8 +236,9 @@ async function decodeVin(vinRaw) {
   vinAborter = new AbortController();
 
   try {
-    // ✅ Correct VPIC endpoint
+    // ✅ correct VPIC endpoint
     const url = `https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvaluesextended/${encodeURIComponent(vin)}?format=json`;
+
     const res = await fetchWithTimeout(url, { timeout: 15000, signal: vinAborter.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -271,7 +252,7 @@ async function decodeVin(vinRaw) {
     if (decYear) setYearSelectValue(yearSel, decYear);
     if (decMake) setSelectValueCaseInsensitive(makeSel, decMake);
 
-    // load models for the decoded Make+Year first, then set Model
+    // Load models first, then set Model to ensure it exists in the list
     await loadModels();
 
     if (decModel) setSelectValueCaseInsensitive(modelSel, decModel);
@@ -308,11 +289,10 @@ vinInput?.addEventListener('input', (e)=>{
 // If a valid VIN is prefilled, try once on load
 if (vinInput && validVin(vinInput.value)) decodeVin(vinInput.value);
 
-/* -------------------- Logo injection & recolor (guarded) -------------------- */
+/* -------------------- Quirk logo injection & recolor (always visible) -------------------- */
 (async function injectAndRecolorQuirkLogo(){
   const slot = document.getElementById('quirkBrand');
   if (!slot) return;
-  if (slot.getAttribute('data-brand-applied') === '1') return; // dealership brand already applied
 
   const BRAND_GREEN = '#0b7d2e';
 
@@ -325,7 +305,7 @@ if (vinInput && validVin(vinInput.value)) decodeVin(vinInput.value);
     const doc = parser.parseFromString(svgText, 'image/svg+xml');
     const svg = doc.documentElement;
 
-    // recolor everything to brand green
+    // recolor to brand green
     svg.querySelectorAll('[fill]').forEach(n => n.setAttribute('fill', BRAND_GREEN));
 
     if (!svg.getAttribute('viewBox')) {
@@ -346,66 +326,4 @@ if (vinInput && validVin(vinInput.value)) decodeVin(vinInput.value);
     slot.innerHTML = '';
     slot.appendChild(img);
   }
-})();
-
-/* -------------------- i18n: English <-> Spanish (compact) -------------------- */
-(function i18n(){
-  const LANG_KEY = "quirk_lang";
-  const map = new Map([
-    // keys used with data-i18n="..."
-    ["decodeVinBtn",            ["Decode VIN & Prefill", "Decodificar VIN y autocompletar"]],
-    ["clearBtn",                ["Clear Form", "Limpiar formulario"]],
-    ["esToggle",                ["versión en español", "Versión en inglés"]],
-    ["title",                   ["Sight Unseen Trade-In Appraisal", "Tasación de Intercambio sin Inspección"]],
-    ["aboutYou",                ["Tell us about Yourself", "Cuéntenos sobre usted"]],
-    ["vehicleDetails",          ["Vehicle Details", "Detalles del Vehículo"]],
-    ["vinLabel",                ["VIN (required)", "VIN (obligatorio)"]],
-    ["selectYear",              ["Select Year", "Seleccione año"]],
-    ["selectMake",              ["Select Make", "Seleccione marca"]],
-    ["selectModel",             ["Select Model", "Seleccione modelo"]],
-  ]);
-
-  function setText(el, en, es, lang){
-    const next = (lang === "es") ? es : en;
-    if (typeof next === "string" && el.textContent.trim() !== next) el.textContent = next;
-  }
-
-  function apply(lang){
-    // elements with known keys
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-      const key = el.getAttribute("data-i18n");
-      const pair = map.get(key);
-      if (!pair) return;
-      setText(el, pair[0], pair[1], lang);
-    });
-
-    // toggle button text (if present)
-    const toggle = document.getElementById("langToggle");
-    if (toggle) {
-      toggle.textContent = (lang === "es") ? "Versión en inglés" : "versión en español";
-      toggle.setAttribute("aria-pressed", String(lang === "es"));
-      if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
-    }
-
-    document.documentElement.setAttribute("lang", lang);
-    try { localStorage.setItem(LANG_KEY, lang); } catch(_) {}
-  }
-
-  // wire toggle
-  const toggle = document.getElementById("langToggle");
-  if (toggle) {
-    if (!toggle.hasAttribute("type")) toggle.setAttribute("type","button");
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      const curr = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
-      apply(curr === "en" ? "es" : "en");
-    });
-  }
-
-  // initial lang
-  const params = new URLSearchParams(location.search);
-  const urlLang = (params.get("lang") || "").toLowerCase();
-  const saved   = (localStorage.getItem(LANG_KEY) || "en").toLowerCase();
-  const start   = (urlLang === "es" || urlLang === "en") ? urlLang : saved;
-  apply(start);
 })();
