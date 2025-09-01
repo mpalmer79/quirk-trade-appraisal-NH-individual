@@ -50,6 +50,28 @@
 
   <div class="utilitybar">
     <div class="left-actions">
+<div class="utilitybar">
+<div class="left-actions">
+<button type="button" id="decodeVinBtn" class="ghost-btn" aria-live="polite" data-i18n="decodeVinBtn">Decode VIN & Prefill</button>
+<button type="button" id="clearBtn" class="ghost-btn" data-i18n="clearBtn">Clear Form</button>
+</div>
+
+
+<!-- ⬇️ Insert dropdown here ⬇️ -->
+<div class="dealership-wrap">
+<label for="dealership" class="sr-only">Dealership</label>
+<select id="dealership" name="dealership" required>
+<option value="" selected disabled>Choose Dealership</option>
+<option>Chevrolet</option>
+<option>Buick GMC</option>
+<option>Kia</option>
+<option>Volkswagen</option>
+</select>
+</div>
+
+
+<button id="langToggle" type="button" class="spanish-btn btn btn-green">versión en español</button>
+</div>      
       <button type="button" id="decodeVinBtn" class="ghost-btn" aria-live="polite" data-i18n="decodeVinBtn">
         Decode VIN & Prefill
       </button>
