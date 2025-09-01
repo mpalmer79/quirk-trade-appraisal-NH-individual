@@ -109,7 +109,11 @@ let form = document.getElementById('tradeForm');
   // Save only for THIS session so success page can brand itself
   el.addEventListener('change', () => {
     try { sessionStorage.setItem('quirk_dealership', el.value || ""); } catch(_) {}
-    applyBrandFromDealership(el.value);
+    // Keep the Quirk logo constant regardless of dealership selection.
+function applyBrandFromDealership(_) {
+  // intentionally empty — do not swap the logo
+}
+
   });
 
   // Optional URL preselect (?dealer=kia etc.)
