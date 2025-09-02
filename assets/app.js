@@ -557,3 +557,47 @@ vinInput?.addEventListener(
   const initial = (urlLang === "es" || urlLang === "en") ? urlLang : "en";
   applyLang(initial);
 })();
+/* -------------------- Clear Form wiring -------------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("tradeForm");
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn && form) {
+    clearBtn.addEventListener("click", () => {
+      form.reset();
+
+      ["year","make","model","trim"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.selectedIndex = 0;
+          el.dispatchEvent(new Event("change"));
+        }
+      });
+
+      ["photoExterior","photoInterior","photoDash","photoDamage"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      ["prevExterior","prevInterior","prevDash","prevDamage"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = "";
+      });
+
+      ["toast","vinStatus","modelStatus","phoneHint"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "";
+      });
+
+      ["referrer","landingPage","utmSource","utmMedium","utmCampaign","utmTerm","utmContent","phoneRaw"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+
+      if (typeof applyI18n === "function") {
+        const lang = sessionStorage.getItem("quirk_lang") || "en";
+        applyI18n(lang);
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+});
