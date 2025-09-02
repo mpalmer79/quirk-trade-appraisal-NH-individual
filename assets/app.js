@@ -295,6 +295,11 @@ async function decodeVin(vinRaw) {
 
     // 4) Model
     if (decModel) setSelectValueCaseInsensitive(modelSel, decModel);
+// After setting Model during VIN decode:
+if (decModel) {
+  setSelectValueCaseInsensitive(modelSel, decModel);
+  modelSel.disabled = false;            // <-- add this line
+}
 
     // 5) Trim
     if (trimInput && decTrim && !trimInput.value) trimInput.value = decTrim;
