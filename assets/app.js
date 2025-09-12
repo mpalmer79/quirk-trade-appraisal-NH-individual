@@ -400,7 +400,9 @@ vinInput?.addEventListener(
     ["Phone Number", "Número de teléfono"],
     ["Email Address", "Correo electrónico"],
     ["(###) ###-####", "(###) ###-####"],
-
+    ["Who is your sales consultant?", "¿Quién es su asesor de ventas?"],
+    ["Who have you been working with?", "¿Con quién ha estado trabajando?"],
+     
     // VIN section
     ["VIN (required)", "VIN (obligatorio)"],
     ["VIN auto-capitalizes; letters I, O, Q are invalid.", "El VIN se escribe en mayúsculas; las letras I, O y Q no son válidas."],
