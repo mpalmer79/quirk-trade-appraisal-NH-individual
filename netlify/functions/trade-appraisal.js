@@ -58,6 +58,8 @@ function normalizeLead(src) {
     name:  safe(src.name),
     email: safe(src.email),
     phone: digits(src.phoneRaw || src.phone).slice(0, 15),
+    dealership: safe(src.dealership),                 // ⬅️ NEW
+    salesConsultant: safe(src.salesConsultant),       // ⬅️ NEW
     vin:   safe((src.vin || "").toUpperCase()),
     year:  safe(src.year),
     make:  safe(src.make),
@@ -74,15 +76,16 @@ function normalizeLead(src) {
 
 /** Build HTML + text tables (includes all provided fields) */
 function buildEmailBodies(lead, rawData) {
+  // Order guaranteed for the email body:
   const preferred = [
-    "name","email","phone","vin","year","make","model","trim","mileage",
+    "name","email","dealership","salesConsultant","phone","vin","year","make","model","trim","mileage",
     "extColor","intColor","title","keys","owners","accident","accidentRepair",
     "warnings","mech","cosmetic","interior","mods","smells","service",
     "tires","brakes","wear","utmSource","utmMedium","utmCampaign","utmTerm","utmContent",
     "referrer","landingPage","submittedAt"
   ];
 
-  const merged = { ...rawData, ...lead }; // preserve normalized
+  const merged = { ...rawData, ...lead }; // preserve normalized where present
   const included = new Set();
   const rows = [];
 
@@ -178,28 +181,26 @@ export async function handler(event) {
   const attachments = uploads.length ? toAttachments(uploads) : undefined;
   const subjectLine = `New Trade-In Lead – ${lead.name} – ${[lead.year, lead.make, lead.model].filter(Boolean).join(" ")}`.trim();
 
+  // Send email
+  try {
+    // allow comma-separated list in TO_EMAIL
+    const recipients = (process.env.TO_EMAIL || "mpalmer@quirkcars.com, steve.obrien@quirkcars.com, jlombard@quirkcars.com, msalihovic@quirkcars.com, nway@quirkcars.com, gmcintosh@quirkcars.com, lmendez@quirkcars.com")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
 
-// Send email
-try {
-  // allow comma-separated list in TO_EMAIL
-  const recipients = (process.env.TO_EMAIL || "mpalmer@quirkcars.com, steve.obrien@quirkcars.com, jlombard@quirkcars.com, msalihovic@quirkcars.com, nway@quirkcars.com, gmcintosh@quirkcars.com, lmendez@quirkcars.com")
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  await sg.send({
-    to: recipients,                    // ✅ now uses TO_EMAIL from Netlify
-    from: process.env.FROM_EMAIL,      // must be a verified sender in SendGrid
-    subject: subjectLine,
-    text,
-    html,
-    attachments,                       // photos ride along if present
-    // replyTo: "sales@quirkcars.com",
-  });
-} catch (e) {
-  return { statusCode: 502, headers, body: "Failed to send lead" };
-}
-
+    await sg.send({
+      to: recipients,
+      from: process.env.FROM_EMAIL,      // must be a verified sender in SendGrid
+      subject: subjectLine,
+      text,
+      html,
+      attachments,                       // photos ride along if present
+      // replyTo: "sales@quirkcars.com",
+    });
+  } catch (e) {
+    return { statusCode: 502, headers, body: "Failed to send lead" };
+  }
 
   // Optional: Sheets backup
   try {
