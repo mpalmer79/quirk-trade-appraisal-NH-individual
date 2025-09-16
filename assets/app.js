@@ -383,7 +383,7 @@ vinInput?.addEventListener(
      "Complete este formulario con información precisa y completa sobre su vehículo. El valor de canje se respetará siempre que la condición del vehículo coincida con sus respuestas. Verificaremos todo cuando traiga el vehículo. Si la condición difiere, la oferta se ajustará en consecuencia."],
     ["Tell us about Yourself", "Cuéntenos sobre usted"],
     ["Vehicle Details", "Detalles del vehículo"],
-    ["Vehicle Condition", "Condición del vehículo"],
+    ["Tell us about your Vehicle", "Cuéntenos sobre su vehículo"],
     ["Wearable Items Check", "Revisión de elementos desgastables"],
     ["Photo Uploads (Optional)", "Cargas de fotos (opcional)"],
     ["Final Disclaimer", "Descargo de responsabilidad final"],
