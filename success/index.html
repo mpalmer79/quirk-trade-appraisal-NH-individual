@@ -34,9 +34,17 @@
       margin: 32px auto 0;
       cursor: pointer;
     }
+
+    /* ensure the card sits above the watermark background */
+    body.has-watermark main {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(2px);
+    }
   </style>
 </head>
-<body>
+<body class="has-watermark">
   <main>
     <h1 id="thanksTitle">Thank you!</h1>
     <p id="thankYouMsg" class="lead">
