@@ -245,3 +245,48 @@ button[disabled] { opacity:.6; cursor:not-allowed; }
     max-width: 90% !important;
   }
 }
+/* === Page Watermark Background === */
+:root {
+  --wm-opacity: 0.12; /* adjust 0.08–0.18 for subtlety */
+}
+
+body.has-watermark {
+  position: relative;
+}
+
+/* Fixed background watermark */
+body.has-watermark::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/assets/quirk-lot.png") center / cover no-repeat;
+  opacity: var(--wm-opacity);
+  z-index: 0;
+  pointer-events: none; /* keep form fields clickable */
+}
+
+/* Ensure form + content are above the watermark */
+body.has-watermark form,
+body.has-watermark .header-title,
+body.has-watermark .section,
+body.has-watermark fieldset,
+body.has-watermark .agreement-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional: light card background if form is transparent */
+body.has-watermark form {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(2px);
+}
+
+/* Mobile: slightly stronger opacity so image is still visible */
+@media (max-width: 768px) {
+  :root { --wm-opacity: 0.16; }
+}
+
+/* Printing: hide watermark */
+@media print {
+  body.has-watermark::before { display: none; }
+}
