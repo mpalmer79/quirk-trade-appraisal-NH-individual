@@ -51,7 +51,7 @@
         <button type="button" id="clearBtn" class="ghost-btn" data-i18n="clearBtn">Clear Form</button>
       </div>
 
-      <!-- Dealership dropdown (kept as in your file) -->
+      <!-- Dealership dropdown -->
       <div class="dealership-wrap">
         <select id="dealership" name="dealership" required>
           <option value="" selected disabled>Choose Dealership</option>
@@ -62,10 +62,13 @@
         </select>
       </div>
 
+      <!-- Mobile-only anchor: Sales Consultant will move here on small screens -->
+      <div id="sc-mobile-anchor" style="width:100%;"></div>
+
       <button id="langToggle" type="button" class="spanish-btn btn btn-green">versión en español</button>
     </div>
 
-    <!-- ===== About You (fixed nesting so both columns show on mobile) ===== -->
+    <!-- ===== About You ===== -->
     <div class="section">
       <h2 data-i18n="aboutYou">Tell us about Yourself</h2>
 
@@ -88,10 +91,12 @@
           <label for="email" class="req" data-i18n="emailLabel">Email Address</label>
           <input id="email" name="email" type="email" autocomplete="email" required>
 
-          <!-- Sales consultant (optional; NOT required) -->
-          <label for="salesConsultant" data-i18n="consultantLabel">Who is your sales consultant?</label>
-          <input id="salesConsultant" name="salesConsultant" type="text"
-                 placeholder="Who have you been working with?">
+          <!-- Desktop home for Sales Consultant (JS will move this block for mobile) -->
+          <div id="sc-desktop-home">
+            <label for="salesConsultant" data-i18n="consultantLabel">Who is your sales consultant?</label>
+            <input id="salesConsultant" name="salesConsultant" type="text"
+                   placeholder="Who have you been working with?">
+          </div>
         </div>
       </div>
     </div>
@@ -262,5 +267,37 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="assets/app.js"></script>
+
+  <!-- Mobile relocation script: moves Sales Consultant under Dealership on small screens only -->
+  <script>
+    (function () {
+      function moveSalesConsultant() {
+        var mql = window.matchMedia("(max-width: 768px)");
+        var mobileAnchor = document.getElementById("sc-mobile-anchor");
+        var desktopHome  = document.getElementById("sc-desktop-home");
+        var scLabel = document.querySelector('label[for="salesConsultant"]');
+        var scInput = document.getElementById("salesConsultant");
+        if (!mobileAnchor || !desktopHome || !scLabel || !scInput) return;
+
+        var currentParent = scLabel.parentElement;
+        if (mql.matches && currentParent !== mobileAnchor) {
+          var frag = document.createDocumentFragment();
+          frag.appendChild(scLabel);
+          frag.appendChild(scInput);
+          mobileAnchor.appendChild(frag);
+        } else if (!mql.matches && currentParent !== desktopHome) {
+          var frag2 = document.createDocumentFragment();
+          frag2.appendChild(scLabel);
+          frag2.appendChild(scInput);
+          desktopHome.appendChild(frag2);
+        }
+      }
+      // run once and on breakpoint changes
+      moveSalesConsultant();
+      var mql = window.matchMedia("(max-width: 768px)");
+      if (mql.addEventListener) mql.addEventListener("change", moveSalesConsultant);
+      else mql.addListener(moveSalesConsultant);
+    })();
+  </script>
 </body>
 </html>
