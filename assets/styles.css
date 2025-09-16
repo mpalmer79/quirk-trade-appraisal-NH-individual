@@ -290,3 +290,23 @@ body.has-watermark form {
 @media print {
   body.has-watermark::before { display: none; }
 }
+/* Default: desktop/larger screens use cover */
+body.has-watermark::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/assets/quirk-lot.png") center / cover no-repeat;
+  opacity: 0.12; /* tweak opacity as needed */
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* On smaller/mobile screens, switch to contain so full image shows */
+@media (max-width: 768px) {
+  body.has-watermark::before {
+    background-size: contain;
+    background-position: top center;
+    background-color: #fff; /* fallback fill behind image */
+    opacity: 0.08; /* optional: lighter on mobile */
+  }
+}
