@@ -6,46 +6,63 @@
   <meta name="robots" content="noindex" />
   <title>Thanks! · Quirk Auto</title>
   <link rel="stylesheet" href="/assets/styles.css" />
+
   <style>
-    /* simple centered card (reuses your styles.css tokens/colors) */
-    main {
+    /* Desktop/tablet: center the card and show a soft lot watermark */
+    body.success {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;          /* vertical centering */
+      justify-content: center;      /* horizontal centering */
+      padding: 40px 16px;           /* breathing room */
+      background:
+        /* overlay controls overall darkness of the background image */
+        linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+        url('/assets/quirk-lot.png') center / cover no-repeat fixed;
+    }
+
+    /* The white “library card” */
+    main.success-card {
       max-width: 720px;
-      margin: 40px auto;
-      background: #fff;
+      width: 100%;
+      background: rgba(255,255,255,0.96);  /* adjust this for card opacity */
       padding: 24px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       text-align: center;
     }
-    h1 { color: #004a2f; margin: 0 0 10px; }
-    p.lead { margin: 0 0 18px; }
-    .btnrow { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
-    .btnrow a { text-decoration: none; }
-    /* make buttons stack on narrow screens */
-    @media (max-width: 560px){
-      .btnrow { flex-direction: column; }
-    }
-    /* logo image */
+
+    h1 { color:#004a2f; margin:0 0 10px; }
+    p.lead { margin:0 0 18px; }
+
+    .btnrow { display:flex; gap:10px; justify-content:center; margin-top:18px; }
+    .btnrow a { text-decoration:none; }
+
     .brand-img {
-      width: 100%;
-      max-width: 720px;
-      height: auto;
-      display: block;
-      margin: 32px auto 0;
-      cursor: pointer;
+      width:100%;
+      max-width:720px;
+      height:auto;
+      display:block;
+      margin:32px auto 0;
+      cursor:pointer;
     }
 
-    /* ensure the card sits above the watermark background */
-    body.has-watermark main {
-      position: relative;
-      z-index: 1;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(2px);
+    /* Mobile-only tweaks: move card near top & make it a touch more opaque */
+    @media (max-width: 640px) {
+      body.success {
+        align-items: flex-start;   /* push card toward the top */
+        padding-top: 16px;         /* small offset from the very top */
+      }
+      main.success-card {
+        background: rgba(255,255,255,0.98); /* slightly more opaque on phones */
+      }
+      .btnrow { flex-direction: column; }
     }
   </style>
 </head>
-<body class="has-watermark">
-  <main>
+
+<body class="success">
+  <main class="success-card">
     <h1 id="thanksTitle">Thank you!</h1>
     <p id="thankYouMsg" class="lead">
       We received your trade-in details. A Quirk specialist will contact you shortly.
@@ -63,7 +80,7 @@
 
     <!-- Clickable “Quirk Works” brand image (URL replaced by success.js) -->
     <a id="heroLink" href="https://www.quirkcars.com/" target="_blank" rel="noopener noreferrer">
-      <img class="brand-img" src="/assets/quirkworks-new.jpg" alt="Quirk Works Logo" />
+      <img class="brand-img" src="/assets/quirkworks-new.jpg" alt="Quirk Works Logo">
     </a>
   </main>
 
