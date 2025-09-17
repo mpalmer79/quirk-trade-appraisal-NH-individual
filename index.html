@@ -24,6 +24,27 @@
       /* Keep injected logo a sensible size on phones */
       #quirkBrand{ max-width:280px; width:70%; height:auto; }
     }
+
+    /* ===========================
+       WATERMARK OVERLAY (0.35)
+       ---------------------------
+       - Background image: assets/quirk-lot3.webp
+       - To change intensity: tweak 'opacity' below.
+         e.g., 0.20 (lighter) … 0.50 (stronger)
+       =========================== */
+    body.has-watermark {
+      position: relative; /* create stacking context for pseudo-element */
+      background-color: #ffffff; /* ensures behind content there is a base */
+    }
+    body.has-watermark::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url("assets/quirk-lot3.webp") center center / cover no-repeat;
+      opacity: 0.35; /* <<< ADJUST THIS VALUE TO CHANGE OVERLAY STRENGTH */
+      pointer-events: none;
+      z-index: -1; /* stay behind page content */
+    }
   </style>
 </head>
 <body class="has-watermark">
