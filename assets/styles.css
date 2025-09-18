@@ -310,3 +310,27 @@ body.has-watermark::before {
     opacity: 0.08; /* optional: lighter on mobile */
   }
 }
+/* Mobile-only: center the Spanish button + tidy utility bar (universal) */
+@media (max-width: 640px) {
+  .utilitybar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;   /* centers children horizontally */
+    gap: 12px;
+  }
+
+  .utilitybar .left-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Center the “versión en español” button regardless of class/id */
+  .utilitybar .spanish-btn,
+  .utilitybar #langToggle {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
