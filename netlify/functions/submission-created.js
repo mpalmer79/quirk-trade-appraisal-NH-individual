@@ -1,5 +1,7 @@
 // netlify/functions/submission-created.js
 import sg from "@sendgrid/mail";
+import mime from "mime-types";
+import { fileTypeFromBuffer } from "file-type";
 
 // --- Configuration ---
 // Ensure your environment variables are set in the Netlify UI:
@@ -120,6 +122,7 @@ function createEmailContent(data) {
 
 /**
  * Fetches uploaded files and prepares them for SendGrid attachments.
+ * Ensures correct MIME types and filename extensions so Outlook will preview images.
  * @param {Array<object>} files - Array of file objects from Netlify.
  * @returns {Promise<Array<object>>} - A promise that resolves to an array of SendGrid attachment objects.
  */
@@ -131,7 +134,7 @@ async function processAttachments(files) {
   const attachments = [];
   let totalSize = 0;
 
-  const fetchPromises = files.slice(0, MAX_ATTACH).map(async (file) => {
+  const fetchPromises = files.slice(0, MAX_ATTACH).map(async (file, i) => {
     try {
       const response = await fetch(file.url);
       if (!response.ok) {
@@ -153,13 +156,28 @@ async function processAttachments(files) {
       }
       totalSize += size;
 
+      // Derive a correct MIME type that Outlook will recognize for previews
+      let derivedMime = file.type || mime.lookup(file.filename) || null;
+      if (!derivedMime) {
+        const ft = await fileTypeFromBuffer(buffer);
+        derivedMime = ft?.mime || null;
+      }
+      if (!derivedMime) derivedMime = "application/octet-stream";
+
+      // Ensure filename has a proper extension that matches the MIME (important for some clients)
+      let filename = file.filename || `upload-${i}`;
+      const extFromMime = mime.extension(derivedMime);
+      if (extFromMime && !filename.toLowerCase().endsWith(`.${extFromMime}`)) {
+        // If no extension or mismatched, and the name doesn't already have one, append the correct one.
+        if (!/\.[a-z0-9]+$/i.test(filename)) {
+          filename += `.${extFromMime}`;
+        }
+      }
+
       return {
-        // *** THIS IS THE FIX ***
-        // The original code had `Buffer.from(buffer)`, which is incorrect.
-        // `buffer` is already a Buffer, so we just need to Base64-encode it.
         content: buffer.toString("base64"),
-        filename: file.filename,
-        type: file.type || "application/octet-stream",
+        filename,
+        type: derivedMime,
         disposition: "attachment",
       };
     } catch (error) {
