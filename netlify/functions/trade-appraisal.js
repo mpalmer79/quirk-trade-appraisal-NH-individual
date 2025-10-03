@@ -33,19 +33,30 @@ async function parseMultipart(event) {
 
   return new Promise((resolve, reject) => {
     busboy.on("field", (name, val) => { fields[name] = val; });
+
+    // IMPORTANT: ignore empty placeholders & non-images
     busboy.on("file", (name, file, info) => {
-      const { filename, mimeType } = info;
+      const { filename = "", mimeType = "" } = info;
       const chunks = [];
       file.on("data", (d) => chunks.push(d));
       file.on("end", () => {
+        const buffer = Buffer.concat(chunks);
+        const cleanName = String(filename || "").trim();
+        const isImage   = /^image\//.test(mimeType);
+        const hasBytes  = buffer.length > 0;
+
+        // Drop any "empty" file slots (prevents 'upload (228 bytes)' placeholders)
+        if (!cleanName || !isImage || !hasBytes) return;
+
         files.push({
           field: name,
-          filename: filename || "upload",
-          mimetype: mimeType || "application/octet-stream",
-          buffer: Buffer.concat(chunks),
+          filename: cleanName,
+          mimetype: mimeType,
+          buffer,
         });
       });
     });
+
     busboy.on("error", reject);
     busboy.on("finish", () => resolve({ fields, files }));
     busboy.end(body);
@@ -128,12 +139,21 @@ function buildEmailBodies(lead, rawData) {
 
 /** Convert parsed files to SendGrid attachments (cap 8) */
 function toAttachments(files) {
-  return files.slice(0, 8).map((f) => ({
-    content: f.buffer.toString("base64"),
-    filename: f.filename,
-    type: f.mimetype,
-    disposition: "attachment",
-  }));
+  return files
+    .filter(f =>
+      f &&
+      f.filename &&
+      f.buffer &&
+      f.buffer.length > 0 &&
+      /^image\//.test(f.mimetype)
+    )
+    .slice(0, 8)
+    .map((f) => ({
+      content: f.buffer.toString("base64"),
+      filename: f.filename,
+      type: f.mimetype,
+      disposition: "attachment",
+    }));
 }
 
 /* ----------------- handler ----------------- */
@@ -178,7 +198,8 @@ export async function handler(event) {
 
   // Build email
   const { html, text } = buildEmailBodies(lead, rawData);
-  const attachments = uploads.length ? toAttachments(uploads) : undefined;
+  const atts = toAttachments(uploads);
+  const attachments = atts.length ? atts : undefined; // only include if real images present
   const subjectLine = `New Trade-In Lead – ${lead.name} – ${[lead.year, lead.make, lead.model].filter(Boolean).join(" ")}`.trim();
 
   // Send email
